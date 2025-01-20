@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clarusway Project - 004</title>
+  <title>CipherXK Project: 24</title>
   <style>
     body {
       max-width: 600px;
@@ -14,8 +14,7 @@
     div {
       margin-top: 100px;
       margin-bottom: 50px;
-      margin-right: auto;
-      margin-left: auto;
+      text-align: center;
     }
 
     img {
@@ -50,39 +49,40 @@
       color: red;
     }
 
-    .sectionnote{
+    .sectionnote {
       color: rgba(190, 31, 164, 0.89);
     }
-    .footnote{
+
+    .footnote {
       color: rgba(0, 0, 255, 0.712);
     }
-
   </style>
 </head>
 
 <body>
 
-  <div><img src="https://clarusway.com/wp-content/uploads/2020/06/clarusway_logo.png" /></div>
+  <div><img src="https://kartik.io/logo.png" alt="Kartik Logo" /></div>
 
-  <h1>Project : Phonebook Application</h1>
-  <h2>Welcome to {{developer_name}}'s Phonebook Application</h2>
-  <h2 class="sectionnote">Enter a name to search</h2>
+  <h1>Phonebook Application</h1>
+  <h2>Welcome to {{developer_name}}'s Phonebook</h2>
+  <h2 class="sectionnote">Search for a contact</h2>
 
   <form action="#" method="post">
-    <label for="name"><b>Name:</b></label>
-    <input placeholder="Keyword" type="text" name="username" id="name">
-    <button type="submit">Search</button>
+    <label for="name"><b>Contact Name:</b></label>
+    <input placeholder="Enter name or keyword" type="text" name="username" id="name">
+    <button type="submit">Find</button>
+
     {% if show_result %}
-        <h1>Result for '{{ keyword }}' </h1>
-            <ul> 
-            {% for person in persons %}
-            <li>Name: <b>{{ person['name'] }} </b>  ---- Phone Number: <b>{{ person['number'] }}</b></li>
-            {% endfor %}
-            </ul>
+        <h1>Results for '{{ keyword }}'</h1>
+        <ul>
+        {% for person in persons %}
+            <li><b>{{ person['name'] }}</b> — Phone: <b>{{ person['number'] }}</b></li>
+        {% endfor %}
+        </ul>
     {% endif %}
   </form>
 
-  <p class="footnote"><i>This app is developed in Python by <b>{{ developer_name }}</b> and deployed with Flask on AWS Cloud using Clouldformation Service.</i></p>
+  <p class="footnote"><i>This phonebook application is built with Python, deployed via Flask on AWS Cloud using CloudFormation.</i></p>
 </body>
 
 </html>

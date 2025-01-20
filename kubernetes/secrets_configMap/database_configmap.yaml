@@ -3,6 +3,7 @@ kind: ConfigMap
 metadata:
   name: database-configmap
 data:
-  MYSQL_USER: clarus 
+  MYSQL_USER: Kartik
   MYSQL_DATABASE: phonebook
   MYSQL_DATABASE_HOST: mysql-service.default.svc.cluster.local
+  

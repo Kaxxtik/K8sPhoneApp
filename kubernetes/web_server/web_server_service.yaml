@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: phonebook-service
   labels:
-    name: phonebook-service
+    app: phonebook-app
 spec:
   type: NodePort
   ports:
@@ -11,4 +11,4 @@ spec:
       targetPort: 80
       nodePort: 30001
   selector:
-    name: phonebook-app-pod
+    app: phonebook-app

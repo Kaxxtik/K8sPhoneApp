@@ -3,29 +3,29 @@ kind: Deployment
 metadata:
   name: result-app-deployment
   labels:
-    name: result-app
+    app: result-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: result-app-pod
+      app: result-app
   template:
     metadata:
-      name: result-app-pod
       labels:
-        app: result-app-pod
+        app: result-app
     spec:
       containers:
       - name: result-app
-        image: serkangumus06/phonebook-main
+        image: Kartik/phonebook-main
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
         env:
         - name: MYSQL_PASSWORD
           valueFrom:
-              secretKeyRef:
-                name: mysql-secret
-                key: mysql-admin-password
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-admin-password
         envFrom:
-          - configMapRef:
-              name: servers-configmap  
+        - configMapRef:
+            name: servers-configmap

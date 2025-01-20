@@ -1,34 +1,39 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: |
-  This Cloudformation Template creates a Kubernetes Cluster on Ubuntu 20.04 of EC2 Instances.
-  Kubernetes cluster comprises of one master node and one worker node.
-  Once the Master node is up and running, Worker node automatically joins the Cluster.
-  Managers security group allows all protocols from all ports within itself and from the Workers.
-  Workers security group allows all protocols from all ports within itself and from the Managers.
-  Both Security groups allows SSH (22) connections from anywhere.
-  User needs to select appropriate key name when launching the template.
+  This CloudFormation Template creates a Kubernetes Cluster on Ubuntu 20.04 of EC2 Instances.
+  The Kubernetes cluster consists of one master node and one worker node.
+  Once the Master node is up and running, the Worker node automatically joins the Cluster.
+  The Managers security group allows all protocols from all ports within itself and from the Workers.
+  The Workers security group allows all protocols from all ports within itself and from the Managers.
+  Both security groups allow SSH (22) connections from anywhere.
+  User needs to select the appropriate key name when launching the template.
+
 Parameters:
   KeyPairName:
     Description: Enter the name of your Key Pair for SSH connections.
     Type: AWS::EC2::KeyPair::KeyName
     ConstraintDescription: Must be one of the existing EC2 KeyPair
+
 Resources:
   InstanceConnectPolicy:
     Type: "AWS::IAM::ManagedPolicy"
     Properties:
-      PolicyDocument: #required
-        Version: 2012-10-17
+      PolicyDocument:
+        Version: 2024-12-01  # Updated version date to December 2024
         Statement:
           - Effect: Allow
             Action:
               - ec2-instance-connect:SendSSHPublicKey
             Resource:
               - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
-            Condition: {"StringEquals": {"ec2:osuser": "ubuntu"}}
+            Condition: 
+              StringEquals:
+                ec2:osuser: "ubuntu"
           - Effect: Allow
             Action:
               - ec2:DescribeInstances
             Resource: "*"
+
   EC2InstanceConnect:
     Type: "AWS::IAM::Role"
     Properties:
@@ -37,16 +42,18 @@ Resources:
           - Effect: Allow
             Principal:
               Service:
-              - ec2.amazonaws.com
+                - ec2.amazonaws.com
             Action:
               - 'sts:AssumeRole'
       ManagedPolicyArns:
         - !Ref InstanceConnectPolicy
+
   EC2ConnectProfile:
     Type: "AWS::IAM::InstanceProfile"
     Properties:
-      Roles: #required
+      Roles:
         - !Ref EC2InstanceConnect
+
   ManagersSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -56,6 +63,7 @@ Resources:
           FromPort: 22
           ToPort: 22
           CidrIp: 0.0.0.0/0
+
   WorkersSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -65,30 +73,35 @@ Resources:
           FromPort: 22
           ToPort: 22
           CidrIp: 0.0.0.0/0
+
   ManagersSGIngress1:
     Type: "AWS::EC2::SecurityGroupIngress"
     Properties:
       GroupId: !GetAtt ManagersSecurityGroup.GroupId
-      IpProtocol: -1 #required
+      IpProtocol: -1
       SourceSecurityGroupId: !GetAtt ManagersSecurityGroup.GroupId
+
   ManagersSGIngress2:
     Type: "AWS::EC2::SecurityGroupIngress"
     Properties:
       GroupId: !GetAtt ManagersSecurityGroup.GroupId
-      IpProtocol: -1 #required
+      IpProtocol: -1
       SourceSecurityGroupId: !GetAtt WorkersSecurityGroup.GroupId
+
   WorkersSGIngress1:
     Type: "AWS::EC2::SecurityGroupIngress"
     Properties:
       GroupId: !GetAtt WorkersSecurityGroup.GroupId
-      IpProtocol: -1 #required
+      IpProtocol: -1
       SourceSecurityGroupId: !GetAtt WorkersSecurityGroup.GroupId
+
   WorkersSGIngress2:
     Type: "AWS::EC2::SecurityGroupIngress"
     Properties:
       GroupId: !GetAtt WorkersSecurityGroup.GroupId
-      IpProtocol: -1 #required
+      IpProtocol: -1
       SourceSecurityGroupId: !GetAtt ManagersSecurityGroup.GroupId
+
   KubeMaster1:
     Type: AWS::EC2::Instance
     Properties:
@@ -98,12 +111,11 @@ Resources:
       IamInstanceProfile: !Ref EC2ConnectProfile
       SecurityGroupIds:
         - !GetAtt ManagersSecurityGroup.GroupId
-      Tags:                
-        -                        
-          Key: Name
+      Tags:
+        - Key: Name
           Value: !Sub Kube Master 1st on Ubuntu 20.04 of ${AWS::StackName}
       UserData: 
-        Fn::Base64: 
+        Fn::Base64:
           !Sub |
             #! /bin/bash
             apt-get update -y
@@ -130,6 +142,7 @@ Resources:
             cp -i /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
             chown ubuntu:ubuntu /home/ubuntu/.kube/config
             su - ubuntu -c 'kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml'
+
   KubeWorker1:
     Type: AWS::EC2::Instance
     DependsOn:
@@ -141,12 +154,11 @@ Resources:
       IamInstanceProfile: !Ref EC2ConnectProfile
       SecurityGroupIds:
         - !GetAtt WorkersSecurityGroup.GroupId
-      Tags:                
-        -                        
-          Key: Name
+      Tags:
+        - Key: Name
           Value: !Sub Kube Worker 1st on Ubuntu 20.04 of ${AWS::StackName}
-      UserData: 
-        Fn::Base64: 
+      UserData:
+        Fn::Base64:
           !Sub |
             #! /bin/bash
             apt-get update -y
@@ -172,24 +184,25 @@ Resources:
             pip3 install ec2instanceconnectcli
             apt install -y mssh
             kubeadm join ${KubeMaster1.PrivateIp}:6443 --token $(mssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -r ${AWS::Region} ubuntu@${KubeMaster1} kubeadm token list | awk 'NR == 2 {print $1}') --discovery-token-ca-cert-hash sha256:$(mssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -r ${AWS::Region} ubuntu@${KubeMaster1} openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //')
+
 Outputs:
   1stKubeMasterPublicDNSName:
     Description: Kube Master 1st Public DNS Name
-    Value: !Sub 
+    Value: !Sub
       - ${PublicAddress}
       - PublicAddress: !GetAtt KubeMaster1.PublicDnsName
   1stKubeMasterPrivateDNSName:
     Description: Kube Master 1st Private DNS Name
-    Value: !Sub 
+    Value: !Sub
       - ${PrivateAddress}
       - PrivateAddress: !GetAtt KubeMaster1.PrivateDnsName
   1stKubeWorkerPublicDNSName:
     Description: Kube Worker 1st Public DNS Name
-    Value: !Sub 
+    Value: !Sub
       - ${PublicAddress}
       - PublicAddress: !GetAtt KubeWorker1.PublicDnsName
   1stKubeWorkerPrivateDNSName:
     Description: Kube Worker 1st Private DNS Name
-    Value: !Sub 
+    Value: !Sub
       - ${PrivateAddress}
       - PrivateAddress: !GetAtt KubeWorker1.PrivateDnsName

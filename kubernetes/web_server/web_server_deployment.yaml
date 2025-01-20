@@ -3,30 +3,28 @@ kind: Deployment
 metadata:
   name: phonebook-app-deployment
   labels:
-    name: phonebook-app
+    app: phonebook-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: phonebook-app-pod
+      app: phonebook-app
   template:
     metadata:
-      name: phonebook-app-pod
       labels:
-        app: phonebook-app-pod
+        app: phonebook-app
     spec:
       containers:
       - name: phonebook-app
-        image: serkangumus06/phonebook-main
+        image: Kartik/phonebook-main
         ports:
         - containerPort: 80
         env:
         - name: MYSQL_PASSWORD
           valueFrom:
-              secretKeyRef:
-                name: mysql-secret
-                key: mysql-admin-password
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-admin-password
         envFrom:
-          - configMapRef:
-              name: servers-configmap 
-
+        - configMapRef:
+            name: servers-configmap
